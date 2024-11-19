@@ -10,11 +10,23 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = product::all();
-        return view("master-data.product-master.index-product", compact('products'));
+        // Ambil semua produk
+        $query = Product::query();
+        // Cek apakah ada parameter 'search' di request
+        if ($request->has('search') && $request->search != '') {
+            // Melakukan pencarian berdasarkan nama produk atau informasi
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('product_name', 'like', '%' . $search . '%');
+            });
+        }
+        // Ambil produk dengan paginasi
+        $products = $query->paginate(2);
+      return view("master-data.product-master.index-product", compact('products'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -50,7 +62,8 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $product = Product::findOrFail(id: $id);
+        return view(view: 'master-data.product-master.detail-product', data: compact(var_name: 'product'));
     }
 
     /**
@@ -96,10 +109,10 @@ class ProductController extends Controller
     public function destroy(string $id)
     {
         $product = Product::find($id);
-        if ($product){
+        if ($product) {
             $product->delete();
-            return redirect()->route('product-index')->with('success','Product berhasil dihapus.');    
+            return redirect()->route('product-index')->with('success', 'Product berhasil dihapus.');
         }
-        return redirect()->route('product-index')->with('error','Product tidak ditemukan.');
+        return redirect()->route('product-index')->with('error', 'Product tidak ditemukan.');
     }
 }
